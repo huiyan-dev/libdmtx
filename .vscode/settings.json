@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "dmtxstatic.h": "c",
+        "time.h": "c",
+        "string_view": "c"
+    },
+    "cmake.configureOnEdit": false,
+    "cmake.configureArgs": [
+        // add your compile arguments
+    ],
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.installPrefix": "${workspaceFolder}/install",
+    "cmake.configureOnOpen": false,
+}

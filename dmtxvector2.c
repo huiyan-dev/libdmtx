@@ -172,16 +172,18 @@ dmtxDistanceAlongRay2(const DmtxRay2 *r, const DmtxVector2 *q)
    return dmtxVector2Dot(dmtxVector2Sub(&vSubTmp, q, &(r->p)), &(r->v));
 }
 
-/**
- *
- *
- */
+// 计算两条射线 p0 和 p1 的交点
+// 使用解析法可以求得下面方法的计算公式
+// 射线   p0 = p0->p + t1 * p0->v
+//        p1 = p1->p + t2 * p1->v
+// 求 t1 和 t2 使得  p0->p == p1->p
 extern DmtxPassFail
 dmtxRay2Intersect(DmtxVector2 *point, const DmtxRay2 *p0, const DmtxRay2 *p1)
 {
    double numer, denom;
    DmtxVector2 w;
 
+   // 平行的情况, 没有交点, 返回失败
    denom = dmtxVector2Cross(&(p1->v), &(p0->v));
    if(fabs(denom) <= DmtxAlmostZero)
       return DmtxFail;
@@ -192,10 +194,7 @@ dmtxRay2Intersect(DmtxVector2 *point, const DmtxRay2 *p0, const DmtxRay2 *p1)
    return dmtxPointAlongRay2(point, p0, numer/denom);
 }
 
-/**
- *
- *
- */
+// 计算在射线 r 上乘以一个比例为 t之后所得点的坐标, 存入 point 
 extern DmtxPassFail
 dmtxPointAlongRay2(DmtxVector2 *point, const DmtxRay2 *r, double t)
 {

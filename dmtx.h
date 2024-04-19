@@ -40,10 +40,12 @@ extern "C" {
 
 #define DmtxUndefined                 -1
 
+// Dmtx 函数返回状态, 通过 Pass 1 或者 Fail 0 
 #define DmtxPassFail        unsigned int
 #define DmtxPass                       1
 #define DmtxFail                       0
 
+// Dmtx bool 值使用 unsigned int 表示
 #define DmtxBoolean         unsigned int
 #define DmtxTrue                       1
 #define DmtxFalse                      0
@@ -67,13 +69,14 @@ extern "C" {
 
 #define DMTX_CHECK_BOUNDS(l,i) (assert((i) >= 0 && (i) < (l)->length && (l)->length <= (l)->capacity))
 
+// Dmtx 状态枚举, 正在解码, 完成解码, 解码过程出现了非常规的状态, 解码过程中出现了预期内不可能出现的状态
 typedef enum {
    DmtxStatusEncoding, /* Encoding is currently underway */
    DmtxStatusComplete, /* Encoding is done and everything went well */
    DmtxStatusInvalid,  /* Something bad happened that sometimes happens */
    DmtxStatusFatal     /* Something happened that should never happen */
 } DmtxStatus;
-
+// Dmtx 的数据编码模式, 字符，字符数字，即不同的模式需要采取不同的方式编码到文件中。
 typedef enum {
    DmtxSchemeAutoFast        = -2,
    DmtxSchemeAutoBest        = -1,
@@ -84,7 +87,8 @@ typedef enum {
    DmtxSchemeEdifact,
    DmtxSchemeBase256
 } DmtxScheme;
-
+// Dmtx 二维码的单元尺寸, 可以自动, 同时分为了长方形和正方形，单元尺寸(符号尺寸) = 数据单元尺寸 + 识别边界(定位标识 + 时钟标识，可以360度全方位读取)
+// 每个码还需要一定量的空白边界
 typedef enum {
    DmtxSymbolRectAuto        = -3,
    DmtxSymbolSquareAuto      = -2,
@@ -120,24 +124,24 @@ typedef enum {
    DmtxSymbol16x36,
    DmtxSymbol16x48
 } DmtxSymbolSize;
-
+// Dmtx方向的描述, int 描述, 使用位移操作保留间隔, 可以使用 | 获得组合的方向描述
 typedef enum {
    DmtxDirNone               = 0x00,
    DmtxDirUp                 = 0x01 << 0,
    DmtxDirLeft               = 0x01 << 1,
    DmtxDirDown               = 0x01 << 2,
    DmtxDirRight              = 0x01 << 3,
-   DmtxDirHorizontal         = DmtxDirLeft  | DmtxDirRight,
+   DmtxDirHorizontal         = DmtxDirLeft  | DmtxDirRight, // 水平 -> 左右
    DmtxDirVertical           = DmtxDirUp    | DmtxDirDown,
-   DmtxDirRightUp            = DmtxDirRight | DmtxDirUp,
+   DmtxDirRightUp            = DmtxDirRight | DmtxDirUp, // 东北 -> RightUp
    DmtxDirLeftDown           = DmtxDirLeft  | DmtxDirDown
 } DmtxDirection;
-
+// Dmtx码的属性字段枚举
 typedef enum {
-   DmtxSymAttribSymbolRows,
-   DmtxSymAttribSymbolCols,
-   DmtxSymAttribDataRegionRows,
-   DmtxSymAttribDataRegionCols,
+   DmtxSymAttribSymbolRows,   // 行数
+   DmtxSymAttribSymbolCols,   // 列数
+   DmtxSymAttribDataRegionRows,  // 数据区的行数
+   DmtxSymAttribDataRegionCols,  // 数据区的列数
    DmtxSymAttribHorizDataRegions,
    DmtxSymAttribVertDataRegions,
    DmtxSymAttribMappingMatrixRows,
@@ -149,14 +153,15 @@ typedef enum {
    DmtxSymAttribSymbolErrorWords,
    DmtxSymAttribSymbolMaxCorrectable
 } DmtxSymAttribute;
-
+// Dmtx 角点位置
 typedef enum {
    DmtxCorner00              = 0x01 << 0,
    DmtxCorner10              = 0x01 << 1,
    DmtxCorner11              = 0x01 << 2,
    DmtxCorner01              = 0x01 << 3
 } DmtxCornerLoc;
-
+// Dmtx算法属性, 编码属性从100开始, 解码属性从200开始, 图像属性从300开始
+// 相当于是属性的 getter 函数, 获得属性会使用这个编码来索引
 typedef enum {
    /* Encoding properties */
    DmtxPropScheme            = 100,
@@ -188,7 +193,7 @@ typedef enum {
    DmtxPropYmax,
    DmtxPropScale
 } DmtxProperty;
-
+// Dmtx 打包的顺序, bpp: bit per pixel, 
 typedef enum {
    /* Custom format */
    DmtxPackCustom            = 100,
@@ -215,52 +220,46 @@ typedef enum {
    DmtxPack32bppXBGR,
    DmtxPack32bppCMYK
 } DmtxPackOrder;
-
+// Dmtx码翻转类型定义
 typedef enum {
-  DmtxFlipNone               = 0x00,
-  DmtxFlipX                  = 0x01 << 0,
-  DmtxFlipY                  = 0x01 << 1
+  DmtxFlipNone               = 0x00,   // 无翻转
+  DmtxFlipX                  = 0x01 << 0, // 沿X轴翻转
+  DmtxFlipY                  = 0x01 << 1  // 沿Y轴翻转
 } DmtxFlip;
-
+// Dmtx 矩阵类型, Matrix3 是三维矩阵, 类型默认使用 double
 typedef double DmtxMatrix3[3][3];
 
-/**
- * @struct DmtxPixelLoc
- * @brief DmtxPixelLoc
- */
+// Dmtx 像素坐标类型
 typedef struct DmtxPixelLoc_struct {
    int X;
    int Y;
 } DmtxPixelLoc;
 
-/**
- * @struct DmtxVector2
- * @brief DmtxVector2
- */
+// Dmtx 二维向量
 typedef struct DmtxVector2_struct {
    double          X;
    double          Y;
 } DmtxVector2;
 
-/**
- * @struct DmtxRay2
- * @brief DmtxRay2
- */
+
+// Dmtx 二维射线的表示
 typedef struct DmtxRay2_struct {
    double          tMin;
    double          tMax;
-   DmtxVector2     p;
-   DmtxVector2     v;
+   DmtxVector2     p;   // 位置
+   DmtxVector2     v;   // 方向
 } DmtxRay2;
 
+// Dmtx 一个Byte对应一个 无符号 char
 typedef unsigned char DmtxByte;
 
 /**
  * @struct DmtxByteList
  * @brief DmtxByteList
- * Use signed int for length fields instead of size_t to play nicely with RS
- * arithmetic
+ * 
  */
+// Use signed int for length fields instead of size_t to play nicely with RS arithmetic
+// 里德-所罗门（Reed-Solomon）算法,用于数据二进制编码 
 typedef struct DmtxByteList_struct DmtxByteList;
 struct DmtxByteList_struct
 {
@@ -268,7 +267,8 @@ struct DmtxByteList_struct
    int capacity;
    DmtxByte *b;
 };
-
+// 编码的数据流类型, 描述了当前的编码模式, 下一个未处理的输入单词等
+// 同时记录了 Dmtx的状态, 输入输出数据流的二进制表示
 typedef struct DmtxEncodeStream_struct DmtxEncodeStream;
 struct DmtxEncodeStream_struct
 {
@@ -284,29 +284,23 @@ struct DmtxEncodeStream_struct
    DmtxByteList *output;
 };
 
-/**
- * @struct DmtxImage
- * @brief DmtxImage
- */
+// Dmtx 图像
 typedef struct DmtxImage_struct {
-   int             width;
-   int             height;
-   int             pixelPacking;
-   int             bitsPerPixel;
-   int             bytesPerPixel;
-   int             rowPadBytes;
-   int             rowSizeBytes;
-   int             imageFlip;
-   int             channelCount;
-   int             channelStart[4];
-   int             bitsPerChannel[4];
-   unsigned char  *pxl;
+   int             width;  // 宽
+   int             height; // 高
+   int             pixelPacking; // 像素打包方式
+   int             bitsPerPixel; // 每个像素用多少 bit 存储
+   int             bytesPerPixel;// 每个像素占多少字节
+   int             rowPadBytes;  // TODO
+   int             rowSizeBytes; // 一行有几个Bytes
+   int             imageFlip;    // 图像是否翻转
+   int             channelCount; // 通道数
+   int             channelStart[4]; // R G B A 的起始位置, 字节为单位
+   int             bitsPerChannel[4];  // 每个通道有多少字节, 像素数量*bitsPerPixel
+   unsigned char  *pxl;    // 像素的数据区, 用字节表示
 } DmtxImage;
 
-/**
- * @struct DmtxPointFlow
- * @brief DmtxPointFlow
- */
+// Dmtx 像素点的流动 ? TODO
 typedef struct DmtxPointFlow_struct {
    int             plane;
    int             arrive;
@@ -315,12 +309,9 @@ typedef struct DmtxPointFlow_struct {
    DmtxPixelLoc    loc;
 } DmtxPointFlow;
 
-/**
- * @struct DmtxBestLine
- * @brief DmtxBestLine
- */
+// Dmtx直线, BestLine存储在像素平面所拟合的最佳直线
 typedef struct DmtxBestLine_struct {
-   int             angle;
+   int             angle;  // TODO
    int             hOffset;
    int             mag;
    int             stepBeg;
@@ -333,10 +324,7 @@ typedef struct DmtxBestLine_struct {
    DmtxPixelLoc    locNeg;
 } DmtxBestLine;
 
-/**
- * @struct DmtxRegion
- * @brief DmtxRegion
- */
+// Dmtx 码区域的描述
 typedef struct DmtxRegion_struct {
 
    /* Trail blazing values */
@@ -386,10 +374,7 @@ typedef struct DmtxRegion_struct {
    DmtxMatrix3     fit2raw;       /* 3x3 transformation from fitted barcode grid to raw image */
 } DmtxRegion;
 
-/**
- * @struct DmtxMessage
- * @brief DmtxMessage
- */
+// Dmtx 消息的描述, 比如 "01-A103"
 typedef struct DmtxMessage_struct {
    size_t          arraySize;     /* mappingRows * mappingCols */
    size_t          codeSize;      /* Size of encoded data (data words + error words) */
@@ -402,10 +387,7 @@ typedef struct DmtxMessage_struct {
    unsigned char  *output;        /* Pointer to internal storage of decoded output */
 } DmtxMessage;
 
-/**
- * @struct DmtxScanGrid
- * @brief DmtxScanGrid
- */
+// Dmtx 扫描网格, Dmtx通过扫描的方式进行Data Matria的识别
 typedef struct DmtxScanGrid_struct {
    /* set once */
    int             minExtent;     /* Smallest cross size used in scan */
@@ -430,19 +412,13 @@ typedef struct DmtxScanGrid_struct {
    int             yCenter;       /* Y center of current cross pattern */
 } DmtxScanGrid;
 
-/**
- * @struct DmtxTime
- * @brief DmtxTime
- */
+// Dmtx 时间的表述
 typedef struct DmtxTime_struct {
    time_t          sec;
    unsigned long   usec;
 } DmtxTime;
 
-/**
- * @struct DmtxDecode
- * @brief DmtxDecode
- */
+// Dmtx 解码, 需要图像加扫描网格已经一个辅助的 cache 来实现 Data Matrix 码的识别
 typedef struct DmtxDecode_struct {
    /* Options */
    int             edgeMin;
@@ -467,19 +443,25 @@ typedef struct DmtxDecode_struct {
    DmtxScanGrid    grid;
 } DmtxDecode;
 
-/**
- * @struct DmtxEncode
- * @brief DmtxEncode
- */
+// Dmtx 编码
 typedef struct DmtxEncode_struct {
+   // default : 0
    int             method;
+   // default : DmtxSchemeAscii
    int             scheme;
+   // default : DmtxSymbolSquareAuto
    int             sizeIdxRequest;
+   // default : 10
    int             marginSize;
+   // default : 5
    int             moduleSize;
+   // default : DmtxPack24bppRGB
    int             pixelPacking;
+   // default : DmtxFlipNone
    int             imageFlip;
+   // default : 0
    int             rowPadBytes;
+   // default : DmtxUndefined
    int             fnc1;
    DmtxMessage    *message;
    DmtxImage      *image;
@@ -488,10 +470,7 @@ typedef struct DmtxEncode_struct {
    DmtxMatrix3     rxfrm; /* XXX still necessary? */
 } DmtxEncode;
 
-/**
- * @struct DmtxChannel
- * @brief DmtxChannel
- */
+// Dmtx 图像通道
 typedef struct DmtxChannel_struct {
    int             encScheme;     /* current encodation scheme */
    int             invalid;       /* channel status (invalid if non-zero) */
@@ -503,79 +482,70 @@ typedef struct DmtxChannel_struct {
    unsigned char   encodedWords[1558];
 } DmtxChannel;
 
-/* Wrap in a struct for fast copies */
-/**
- * @struct DmtxChannelGroup
- * @brief DmtxChannelGroup
- */
+// Wrap in a struct for fast copies, 
 typedef struct DmtxChannelGroup_struct {
    DmtxChannel channel[6];
 } DmtxChannelGroup;
 
-/**
- * @struct DmtxTriplet
- * @brief DmtxTriplet
- */
+// 三元组, 一个占一个字节
 typedef struct DmtxTriplet_struct {
    unsigned char   value[3];
 } DmtxTriplet;
 
-/**
- * @struct DmtxQuadruplet
- * @brief DmtxQuadruplet
- */
+// 四元组, 一个占一个字节 
 typedef struct DmtxQuadruplet_struct {
    unsigned char   value[4];
 } DmtxQuadruplet;
 
 /* dmtxtime.c */
-extern DmtxTime dmtxTimeNow(void);
-extern DmtxTime dmtxTimeAdd(DmtxTime t, long msec);
-extern int dmtxTimeExceeded(DmtxTime timeout);
+extern DmtxTime dmtxTimeNow(void);  // 获取当前时间 秒 + 微秒
+extern DmtxTime dmtxTimeAdd(DmtxTime t, long msec);  // 向当前时间添加 msec 毫秒
+extern int dmtxTimeExceeded(DmtxTime timeout);  // 判断是否超时
 
 /* dmtxencode.c */
-extern DmtxEncode *dmtxEncodeCreate(void);
-extern DmtxPassFail dmtxEncodeDestroy(DmtxEncode **enc);
-extern DmtxPassFail dmtxEncodeSetProp(DmtxEncode *enc, int prop, int value);
-extern int dmtxEncodeGetProp(DmtxEncode *enc, int prop);
-extern DmtxPassFail dmtxEncodeDataMatrix(DmtxEncode *enc, int n, unsigned char *s);
-extern DmtxPassFail dmtxEncodeDataMosaic(DmtxEncode *enc, int n, unsigned char *s);
+extern DmtxEncode *dmtxEncodeCreate(void);   // dmtx 编码对象创建, 相当于构造函数
+extern DmtxPassFail dmtxEncodeDestroy(DmtxEncode **enc);   // dmtx 编码对象析构
+extern DmtxPassFail dmtxEncodeSetProp(DmtxEncode *enc, int prop, int value);  // dmtx 设置对象属性
+extern int dmtxEncodeGetProp(DmtxEncode *enc, int prop); // dmtx 获得对象属性
+extern DmtxPassFail dmtxEncodeDataMatrix(DmtxEncode *enc, int n, unsigned char *s); // message ---> data matrix
+extern DmtxPassFail dmtxEncodeDataMosaic(DmtxEncode *enc, int n, unsigned char *s); // message ---> data mosaic
 
 /* dmtxdecode.c */
-extern DmtxDecode *dmtxDecodeCreate(DmtxImage *img, int scale);
-extern DmtxPassFail dmtxDecodeDestroy(DmtxDecode **dec);
-extern DmtxPassFail dmtxDecodeSetProp(DmtxDecode *dec, int prop, int value);
-extern int dmtxDecodeGetProp(DmtxDecode *dec, int prop);
+extern DmtxDecode *dmtxDecodeCreate(DmtxImage *img, int scale);   // dmtx 解码对象创建, 相当于构造函数
+extern DmtxPassFail dmtxDecodeDestroy(DmtxDecode **dec);   // dmtx 解码对象析构
+extern DmtxPassFail dmtxDecodeSetProp(DmtxDecode *dec, int prop, int value);  // dmtx 设置对象属性
+extern int dmtxDecodeGetProp(DmtxDecode *dec, int prop); // dmtx 获得对象属性
 extern /*@exposed@*/ unsigned char *dmtxDecodeGetCache(DmtxDecode *dec, int x, int y);
 extern DmtxPassFail dmtxDecodeGetPixelValue(DmtxDecode *dec, int x, int y, int channel, /*@out@*/ int *value);
-extern DmtxMessage *dmtxDecodeMatrixRegion(DmtxDecode *dec, DmtxRegion *reg, int fix);
-extern DmtxMessage *dmtxDecodePopulatedArray(int sizeIdx, DmtxMessage *msg, int fix);
-extern DmtxMessage *dmtxDecodeMosaicRegion(DmtxDecode *dec, DmtxRegion *reg, int fix);
+extern DmtxMessage *dmtxDecodeMatrixRegion(DmtxDecode *dec, DmtxRegion *reg, int fix); // data matrix ---> message
+extern DmtxMessage *dmtxDecodePopulatedArray(int sizeIdx, DmtxMessage *msg, int fix);  // data array ---> message
+extern DmtxMessage *dmtxDecodeMosaicRegion(DmtxDecode *dec, DmtxRegion *reg, int fix); // data mosaic ---> message
+// 根据解码的信息获得 totalBytes 和 headerBytes, 可以用于校验
 extern unsigned char *dmtxDecodeCreateDiagnostic(DmtxDecode *dec, /*@out@*/ int *totalBytes, /*@out@*/ int *headerBytes, int style);
 
 /* dmtxregion.c */
-extern DmtxRegion *dmtxRegionCreate(DmtxRegion *reg);
-extern DmtxPassFail dmtxRegionDestroy(DmtxRegion **reg);
-extern DmtxRegion *dmtxRegionFindNext(DmtxDecode *dec, DmtxTime *timeout);
-extern DmtxRegion *dmtxRegionScanPixel(DmtxDecode *dec, int x, int y);
+extern DmtxRegion *dmtxRegionCreate(DmtxRegion *reg); // 创建 DmtxRegion
+extern DmtxPassFail dmtxRegionDestroy(DmtxRegion **reg); // 析构 DmtxRegion
+extern DmtxRegion *dmtxRegionFindNext(DmtxDecode *dec, DmtxTime *timeout); // 检测 DmtxRegion, 只检测单个, 检测到便退出, 同时可以设置最大检测时间
+extern DmtxRegion *dmtxRegionScanPixel(DmtxDecode *dec, int x, int y);  // 逐像素扫描, 只检测单个data matrix, 检测到便退出
 extern DmtxPassFail dmtxRegionUpdateCorners(DmtxDecode *dec, DmtxRegion *reg, DmtxVector2 p00,
-      DmtxVector2 p10, DmtxVector2 p11, DmtxVector2 p01);
-extern DmtxPassFail dmtxRegionUpdateXfrms(DmtxDecode *dec, DmtxRegion *reg);
+      DmtxVector2 p10, DmtxVector2 p11, DmtxVector2 p01);   // 更新 dmtxRegion 的角点
+extern DmtxPassFail dmtxRegionUpdateXfrms(DmtxDecode *dec, DmtxRegion *reg);  // 根据 DmtxRegion 更新检测到的DataMtrix角点像素坐标
 
 /* dmtxmessage.c */
-extern DmtxMessage *dmtxMessageCreate(int sizeIdx, int symbolFormat);
-extern DmtxPassFail dmtxMessageDestroy(DmtxMessage **msg);
+extern DmtxMessage *dmtxMessageCreate(int sizeIdx, int symbolFormat);   // 根据data matrix的格式分配DmtxMessage内存, 格式确定编码的长度都固定了
+extern DmtxPassFail dmtxMessageDestroy(DmtxMessage **msg);  // DmtxMessage析构
 
 /* dmtximage.c */
-extern DmtxImage *dmtxImageCreate(unsigned char *pxl, int width, int height, int pack);
-extern DmtxPassFail dmtxImageDestroy(DmtxImage **img);
-extern DmtxPassFail dmtxImageSetChannel(DmtxImage *img, int channelStart, int bitsPerChannel);
+extern DmtxImage *dmtxImageCreate(unsigned char *pxl, int width, int height, int pack);   // 创建图像, 像素数据+编码方式+宽高
+extern DmtxPassFail dmtxImageDestroy(DmtxImage **img);   // 图像对象析构
+extern DmtxPassFail dmtxImageSetChannel(DmtxImage *img, int channelStart, int bitsPerChannel);  // 一些Image属性的 getter/setter
 extern DmtxPassFail dmtxImageSetProp(DmtxImage *img, int prop, int value);
 extern int dmtxImageGetProp(DmtxImage *img, int prop);
 extern int dmtxImageGetByteOffset(DmtxImage *img, int x, int y);
 extern DmtxPassFail dmtxImageGetPixelValue(DmtxImage *img, int x, int y, int channel, /*@out@*/ int *value);
 extern DmtxPassFail dmtxImageSetPixelValue(DmtxImage *img, int x, int y, int channel, int value);
-extern DmtxBoolean dmtxImageContainsInt(DmtxImage *img, int margin, int x, int y);
+extern DmtxBoolean dmtxImageContainsInt(DmtxImage *img, int margin, int x, int y);  // 检测图像坐标是否越界
 extern DmtxBoolean dmtxImageContainsFloat(DmtxImage *img, double x, double y);
 
 /* dmtxvector2.c */
@@ -586,13 +556,13 @@ extern DmtxVector2 *dmtxVector2Sub(/*@out@*/ DmtxVector2 *vOut, const DmtxVector
 extern DmtxVector2 *dmtxVector2ScaleBy(DmtxVector2 *v, double s);
 extern DmtxVector2 *dmtxVector2Scale(/*@out@*/ DmtxVector2 *vOut, const DmtxVector2 *v, double s);
 extern double dmtxVector2Cross(const DmtxVector2 *v1, const DmtxVector2 *v2);
-extern double dmtxVector2Norm(DmtxVector2 *v);
+extern double dmtxVector2Norm(DmtxVector2 *v);  // 归一化向量
 extern double dmtxVector2Dot(const DmtxVector2 *v1, const DmtxVector2 *v2);
 extern double dmtxVector2Mag(const DmtxVector2 *v);
-extern double dmtxDistanceFromRay2(const DmtxRay2 *r, const DmtxVector2 *q);
-extern double dmtxDistanceAlongRay2(const DmtxRay2 *r, const DmtxVector2 *q);
-extern DmtxPassFail dmtxRay2Intersect(/*@out@*/ DmtxVector2 *point, const DmtxRay2 *p0, const DmtxRay2 *p1);
-extern DmtxPassFail dmtxPointAlongRay2(/*@out@*/ DmtxVector2 *point, const DmtxRay2 *r, double t);
+extern double dmtxDistanceFromRay2(const DmtxRay2 *r, const DmtxVector2 *q);  // 点q到射线的距离, DmtxRay2的向量默认是归一化的
+extern double dmtxDistanceAlongRay2(const DmtxRay2 *r, const DmtxVector2 *q); // 向量 (r->p)q 在射线 r 方向上的投影距离
+extern DmtxPassFail dmtxRay2Intersect(/*@out@*/ DmtxVector2 *point, const DmtxRay2 *p0, const DmtxRay2 *p1);  // 求解射线所在直线的交点
+extern DmtxPassFail dmtxPointAlongRay2(/*@out@*/ DmtxVector2 *point, const DmtxRay2 *r, double t); // 获得射线 r 方向上, 从起点开始距离加 t 的点坐标point
 
 /* dmtxmatrix3.c */
 extern void dmtxMatrix3Copy(/*@out@*/ DmtxMatrix3 m0, DmtxMatrix3 m1);
